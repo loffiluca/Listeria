@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vida útil postapertura — Listeria mon bebidas vegetales</title>
+<style>
+  :root{
+    --ink:#222; --accent:#374f5a; --accent-dark:#263842;
+    --high:#8f2f39; --mid:#b07a1e; --low:#4f7a6d;
+    --line:#c9cdcf; --panel:#fafaf8; --mute:#666;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);
+       background:#fff;line-height:1.45;padding:28px 32px;}
+  .wrap{max-width:1020px;margin:0 auto;}
+  header{border-bottom:3px solid var(--accent);padding-bottom:10px;}
+  header h1{font-size:22px;margin:0 0 3px;font-weight:normal;}
+  header .autor{font-size:13px;color:var(--mute);font-family:Arial,Helvetica,sans-serif;}
+  .cols{display:grid;grid-template-columns:300px 1fr;gap:26px;margin-top:20px;}
+  @media(max-width:800px){.cols{grid-template-columns:1fr;}}
+  h2.sec{font-size:12px;font-family:Arial,Helvetica,sans-serif;text-transform:uppercase;
+         letter-spacing:.8px;color:var(--accent);border-bottom:1px solid var(--line);
+         padding-bottom:4px;margin:18px 0 10px;}
+  .matrices{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .matrices button{padding:7px 4px;border:1px solid var(--line);background:#fff;
+       font-family:Arial,Helvetica,sans-serif;font-size:14px;color:var(--ink);cursor:pointer;}
+  .matrices button.sel{border:1px solid var(--accent);background:var(--accent);color:#fff;}
+  .matrices button:hover{border-color:var(--accent);}
+  .temp-val{font-family:Arial,Helvetica,sans-serif;font-size:34px;}
+  .temp-unit{font-size:18px;color:var(--mute);}
+  input[type=range]{width:100%;accent-color:var(--accent);margin:6px 0 2px;}
+  .scale{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);
+         font-family:Arial,Helvetica,sans-serif;}
+  details{margin-top:16px;font-family:Arial,Helvetica,sans-serif;font-size:13px;}
+  summary{cursor:pointer;color:var(--accent-dark);}
+  .opt-row{display:flex;gap:12px;margin-top:8px;}
+  .opt-row div{flex:1;}
+  .opt-row input{width:100%;padding:5px;border:1px solid var(--line);font-size:14px;}
+  .opt-row span{font-size:11.5px;color:var(--mute);}
+  .verdict{border-left:6px solid var(--line);padding:12px 16px;color:#fff;margin-bottom:14px;}
+  .verdict .rk{font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:bold;
+       letter-spacing:1.5px;margin-bottom:2px;}
+  .verdict .big{font-size:40px;line-height:1.1;}
+  .verdict .sub{font-size:14px;font-family:Arial,Helvetica,sans-serif;opacity:.95;margin-top:2px;}
+  table.metrics{width:100%;border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;
+       font-size:12.5px;margin-bottom:12px;}
+  table.metrics th,table.metrics td{border:1px solid var(--line);padding:6px 8px;text-align:center;}
+  table.metrics th{background:var(--panel);color:var(--mute);font-weight:normal;}
+  table.metrics td b{font-family:Arial,Helvetica,sans-serif;font-size:17px;}
+  .banner{display:none;background:#f7ecec;border:1px solid var(--high);color:var(--high);
+       padding:8px 12px;font-size:12.5px;font-family:Arial,Helvetica,sans-serif;margin-bottom:12px;}
+  .banner.on{display:block;}
+  canvas{width:100%;height:250px;background:#fff;border:1px solid var(--line);}
+  .notes{font-size:11.5px;color:var(--mute);font-family:Arial,Helvetica,sans-serif;
+         margin-top:18px;border-top:1px solid var(--line);padding-top:10px;line-height:1.5;}
+  .notes b{color:var(--ink);}
+</style>
+<base target="_blank">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Vida útil postapertura de bebidas vegetales — crecimiento de <i>Listeria monocytogenes</i></h1>
+    <div class="autor">L. Loffi · Universidad Maimónides, Buenos Aires · Modelo predictivo sobre datos de desafío publicados</div>
+  </header>
+
+  <div class="cols">
+    <!-- CONTROLES -->
+    <div>
+      <h2 class="sec">Matriz</h2>
+      <div class="matrices" id="matrices"></div>
+
+      <h2 class="sec">Temperatura de conservación</h2>
+      <div><span class="temp-val" id="tempVal">8</span> <span class="temp-unit">°C</span></div>
+      <input type="range" id="temp" min="0" max="35" step="1" value="8">
+      <div class="scale"><span>0 °C</span><span>20 °C</span><span>35 °C</span></div>
+
+      <details>
+        <summary>Opciones avanzadas (supuestos)</summary>
+        <div class="opt-row">
+          <div>
+            <div style="font-size:11.5px;color:var(--mute);margin-bottom:2px;">Inóculo inicial (UFC/mL)</div>
+            <input type="number" id="inoc" min="0.01" step="0.1" value="1">
+          </div>
+          <div>
+            <div style="font-size:11.5px;color:var(--mute);margin-bottom:2px;">Umbral (aumento en log)</div>
+            <input type="number" id="umbral" min="0.5" step="0.5" value="2">
+          </div>
+        </div>
+        <div style="margin-top:6px;color:var(--mute);">Umbral 2 = 100 UFC/mL a partir de 1 UFC/mL.</div>
+      </details>
+    </div>
+
+    <!-- RESULTADO -->
+    <div>
+      <div class="verdict" id="verdict">
+        <div class="rk" id="riskLabel">RIESGO</div>
+        <div class="big" id="timeBig">—</div>
+        <div class="sub" id="windowSub">—</div>
+      </div>
+      <table class="metrics">
+        <tr><th>µ estimada (log UFC/mL/h)</th><th>Horas al umbral</th><th>Nivel objetivo (UFC/mL)</th></tr>
+        <tr><td><b id="muVal">—</b></td><td><b id="hVal">—</b></td><td><b id="targetVal">—</b></td></tr>
+      </table>
+      <div class="banner" id="banner">Temperatura por encima del rango calibrado (20 °C): extrapolación. Requiere verificación local.</div>
+      <canvas id="chart" width="900" height="520"></canvas>
+    </div>
+  </div>
+
+  <div class="notes">
+    <b>Modelo.</b> Secundario tipo raíz cuadrada (Ratkowsky agrupado: b = 0,0227; Tmin = −1,39 °C), escalado al valor observado a 20 °C de cada matriz; primario log-lineal. El tiempo al umbral se calcula como aumento_log / µ, <b>sin descontar la fase de latencia</b> (estimación conservadora). Velocidades a 20 °C: Bartula et al. (2023, almendra y coco; <i>Food Microbiology</i> 109:104143) y Bartula et al. (2024, avena, soja, arveja; <i>Food Microbiology</i> 121:104530). Densidad máxima (meseta): Kain et al. (2024), referencial; no interviene en el tiempo al umbral.
+    <b>Umbral.</b> 100 UFC/mL se toma como referencia operativa del criterio de 100 UFC/g de la UE (Reglamento CE 2073/2005); para alimentos que soportan crecimiento (pH 6–7) el límite por defecto es ausencia en 25 g, por lo que la cota es indicativa.
+    <b>Riesgo.</b> Ventana &lt; 1 día: alto · 1 a 3 días: medio · ≥ 3 días: bajo.
+    <b>Alcance.</b> Prueba de concepto con datos de literatura; las matrices y cepas locales requieren estudios propios.
+  </div>
+</div>
+
+<script>
+var B = 0.0227, TMIN = -1.39;
+var MU_OBS20 = {Almendra:0.250, Coco:0.230, Avena:0.183, Soja:0.200, Arveja:0.200};
+var MPD = {Almendra:9.1, Coco:8.7, Avena:9.6, Soja:9.4, Arveja:9.4};
+var MATRICES = ["Avena","Soja","Almendra","Coco","Arveja"];
+
+function muPred(T){ var v = B*(T - TMIN); return v>0 ? v*v : 0; }
+function muMatrix(T, m){ var f = MU_OBS20[m] / muPred(20); return muPred(T) * f; }
+
+var state = {matriz:"Avena", T:8, inoc:1, umbral:2};
+
+var cont = document.getElementById("matrices");
+MATRICES.forEach(function(m){
+  var b = document.createElement("button");
+  b.textContent = m; b.dataset.m = m;
+  if(m===state.matriz) b.className="sel";
+  b.onclick = function(){ state.matriz=m;
+    document.querySelectorAll('.matrices button').forEach(function(x){x.className=(x.dataset.m===m)?'sel':'';});
+    update(); };
+  cont.appendChild(b);
+});
+
+document.getElementById("temp").oninput = function(){ state.T=+this.value; document.getElementById("tempVal").textContent=this.value; update(); };
+document.getElementById("inoc").oninput = function(){ state.inoc=Math.max(0.01,+this.value||1); update(); };
+document.getElementById("umbral").oninput = function(){ state.umbral=Math.max(0.5,+this.value||2); update(); };
+
+function fmtTime(h){
+  var d = h/24;
+  if(d>=1) return d.toFixed(1).replace('.',',')+" días";
+  return Math.round(h)+" horas";
+}
+function riskOf(h){
+  var d=h/24;
+  if(d<1) return {k:"RIESGO ALTO", c:"#8f2f39"};
+  if(d<3) return {k:"RIESGO MEDIO", c:"#b07a1e"};
+  return {k:"RIESGO BAJO", c:"#4f7a6d"};
+}
+
+function update(){
+  var mu = muMatrix(state.T, state.matriz);
+  var h = mu>1e-9 ? state.umbral/mu : Infinity;
+  var r = riskOf(h);
+  var inocLog = Math.log10(state.inoc);
+  var targetLog = inocLog + state.umbral;
+  var targetConc = Math.pow(10, targetLog);
+
+  document.getElementById("verdict").style.borderLeftColor = r.c;
+  document.getElementById("verdict").style.background = r.c;
+  document.getElementById("riskLabel").textContent = r.k;
+  document.getElementById("timeBig").textContent = fmtTime(h);
+  document.getElementById("windowSub").textContent = "Ventana de consumo seguro tras abrir, conservando a "+state.T+" °C";
+  document.getElementById("muVal").textContent = mu.toFixed(3).replace('.',',');
+  document.getElementById("hVal").textContent = Math.round(h).toLocaleString('es-AR');
+  document.getElementById("targetVal").textContent = Math.round(targetConc).toLocaleString('es-AR');
+
+  document.getElementById("banner").className = (state.T>20) ? "banner on" : "banner";
+
+  drawChart(mu, h, inocLog, targetLog);
+}
+
+function drawChart(mu, hTarget, inocLog, targetLog){
+  var c = document.getElementById("chart"), ctx=c.getContext("2d");
+  var W=c.width, H=c.height; ctx.clearRect(0,0,W,H);
+  var padL=64, padR=20, padT=20, padB=50;
+  var ymax = Math.max(MPD[state.matriz], targetLog) + 0.5;
+  var ymin = 0;
+  var tToMPD = mu>1e-9 ? (MPD[state.matriz]-inocLog)/mu : 1e6;
+  var xmax = Math.max(Math.min(tToMPD*1.05, 360), hTarget*1.4, 12);
+  function X(t){ return padL + (t/xmax)*(W-padL-padR); }
+  function Y(y){ return padT + (1-(y-ymin)/(ymax-ymin))*(H-padT-padB); }
+
+  ctx.strokeStyle="#dde2e4"; ctx.lineWidth=1; ctx.fillStyle="#5c666c"; ctx.font="12px Arial";
+  for(var yy=0; yy<=Math.floor(ymax); yy+=2){
+    ctx.beginPath(); ctx.moveTo(padL,Y(yy)); ctx.lineTo(W-padR,Y(yy)); ctx.stroke();
+    ctx.fillText(yy, padL-22, Y(yy)+4);
+  }
+  ctx.save(); ctx.translate(14,H/2); ctx.rotate(-Math.PI/2); ctx.textAlign="center";
+  ctx.fillText("log10 UFC/mL", 0,0); ctx.restore();
+  ctx.textAlign="center"; ctx.fillText("Tiempo postapertura (h)", (padL+W-padR)/2, H-14);
+  ctx.textAlign="left";
+  var ticks=5;
+  for(var i=0;i<=ticks;i++){ var t=xmax*i/ticks; ctx.fillText(Math.round(t), X(t)-8, H-padB+18); }
+
+  ctx.strokeStyle="#16202B"; ctx.setLineDash([5,4]); ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(padL,Y(targetLog)); ctx.lineTo(W-padR,Y(targetLog)); ctx.stroke();
+  ctx.setLineDash([]); ctx.fillStyle="#16202B"; ctx.textAlign="right";
+  ctx.fillText("umbral 100 UFC/mL", W-padR-4, Y(targetLog)-6); ctx.textAlign="left";
+
+  var col = riskOf(hTarget).c;
+  ctx.strokeStyle=col; ctx.lineWidth=3; ctx.beginPath();
+  var first=true;
+  for(var t=0;t<=xmax;t+=xmax/240){
+    var y=Math.min(inocLog+mu*t, MPD[state.matriz]);
+    var px=X(t), py=Y(y);
+    if(first){ctx.moveTo(px,py);first=false;} else ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+
+  if(isFinite(hTarget) && hTarget<=xmax){
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(X(hTarget),Y(targetLog),5.5,0,2*Math.PI); ctx.fill();
+  }
+}
+
+update();
+</script>
+</body>
+</html>
