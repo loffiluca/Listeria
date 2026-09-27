@@ -73,8 +73,8 @@
 
       <h2 class="sec">Temperatura de conservación</h2>
       <div><span class="temp-val" id="tempVal">8</span> <span class="temp-unit">°C</span></div>
-      <input type="range" id="temp" min="0" max="35" step="1" value="8">
-      <div class="scale"><span>0 °C</span><span>20 °C</span><span>35 °C</span></div>
+      <input type="range" id="temp" min="0" max="20" step="1" value="8">
+      <div class="scale"><span>0 °C</span><span>10 °C</span><span>20 °C</span></div>
 
       <details>
         <summary>Opciones avanzadas (supuestos)</summary>
@@ -103,7 +103,7 @@
         <tr><th>µ estimada (log UFC/mL/h)</th><th>Horas al umbral</th><th>Nivel objetivo (UFC/mL)</th></tr>
         <tr><td><b id="muVal">—</b></td><td><b id="hVal">—</b></td><td><b id="targetVal">—</b></td></tr>
       </table>
-      <div class="banner" id="banner">Temperatura por encima del rango calibrado (20 °C): extrapolación. Requiere verificación local.</div>
+      <div class="banner" id="banner">Temperatura cercana al límite del rango calibrado (20 °C).</div>
       <canvas id="chart" width="900" height="520"></canvas>
     </div>
   </div>
@@ -171,7 +171,7 @@ function update(){
   document.getElementById("hVal").textContent = Math.round(h).toLocaleString('es-AR');
   document.getElementById("targetVal").textContent = Math.round(targetConc).toLocaleString('es-AR');
 
-  document.getElementById("banner").className = (state.T>20) ? "banner on" : "banner";
+  document.getElementById("banner").className = (state.T>15) ? "banner on" : "banner";
 
   drawChart(mu, h, inocLog, targetLog);
 }
